@@ -1,36 +1,75 @@
-const mongoose = require("mongoose");
 
-const customerSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Customer name is required"],
-    trim: true
+const mongoose = require('mongoose');
+
+const CustomerSchema = new mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    totalSpend: {
+      type: Number,
+      default: 0,
+    },
+    visitCount: {
+      type: Number,
+      default: 0,
+    },
+    lastVisitDate: {
+      type: Date,
+    },
+    customerType: {
+      type: String,
+      enum: ['standard', 'premium', 'vip'],
+      default: 'standard',
+    },
+    location: {
+      type: String,
+    },
+    inactiveDays: {
+      type: Number,
+      default: 0,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    metadata: {
+      type: Object,
+      default: {},
+    }
   },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    unique: true,
-    lowercase: true,
-    match: [ /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Invalid email format" ]
-  },
-  totalSpend: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  totalVisits: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  lastActive: {
-    type: Date,
-    default: Date.now()
-  },
-  tags: {
-    type: [String],
-    default: []
+  {
+    timestamps: true,
   }
+);
+
+// Calculate inactive days based on lastVisitDate
+CustomerSchema.pre('save', function(next) {
+  if (this.lastVisitDate) {
+    const currentDate = new Date();
+    const lastVisitDate = new Date(this.lastVisitDate);
+    const diffTime = Math.abs(currentDate - lastVisitDate);
+    this.inactiveDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+  next();
 });
 
-module.exports = mongoose.model("Customer", customerSchema);
+module.exports = mongoose.model('Customer', CustomerSchema);
