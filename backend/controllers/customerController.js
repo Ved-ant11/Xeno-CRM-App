@@ -2,64 +2,51 @@ const Customer = require("../models/Customer");
 
 exports.createCustomer = async (req, res) => {
   try {
-    const customer = await Customer.create(req.body);
-    res.status(201).json(customer);
+    const newCustomer = new Customer({
+      ...req.body,
+      user: req.user.id,
+    });
+    const customer = await newCustomer.save();
+    res.json(customer);
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(400).json({ error: "Email already exists" });
-    }
-    res.status(500).json({ error: "Server error" });
+    res.status(500).send("Server Error");
   }
 };
 
-exports.getAllCustomers = async (req, res) => {
+exports.getCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find();
+    const customers = await Customer.find({ user: req.user.id });
     res.json(customers);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).send("Server Error");
   }
 };
-
-
 
 exports.getCustomerById = async (req, res) => {
   try {
     const customer = await Customer.findById(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
-    }
     res.json(customer);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).send("Server Error");
   }
 };
 
 exports.updateCustomer = async (req, res) => {
   try {
-    const updatedCustomer = await Customer.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedCustomer) {
-      return res.status(404).json({ error: "Customer not found" });
-    }
-    res.json(updatedCustomer);
+    const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(customer);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).send("Server Error");
   }
 };
 
 exports.deleteCustomer = async (req, res) => {
   try {
-    const deletedCustomer = await Customer.findByIdAndDelete(req.params.id);
-    if (!deletedCustomer) {
-      return res.status(404).json({ error: "Customer not found" });
-    }
-    res.json(deletedCustomer);
+    const customer = await Customer.findByIdAndDelete(req.params.id);
+    res.json(customer);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).send("Server Error");
   }
 };
-
